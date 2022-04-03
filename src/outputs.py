@@ -5,7 +5,8 @@ import logging
 from prettytable import PrettyTable
 
 import constants as const
-from constants import BASE_DIR
+from constants import BASE_DIR  # especially for tests
+
 
 def control_output(results, cli_args):
     if cli_args.output == 'file':

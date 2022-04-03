@@ -2,7 +2,9 @@ import logging
 
 from bs4 import BeautifulSoup
 from requests import RequestException
-from exceptions import ParserFindTagException
+
+import constants as const
+from exceptions import ParserFindTagException, TableException
 
 
 def get_response(session, url):
@@ -66,3 +68,28 @@ def view_pep_page(url, session):
                 )
             status = tags[1].text
     return tipe, status
+
+
+def add_to_dict(dic, value):
+    """Увеличивает значении при наличии ключа либо создаёт новый ключ.
+    """
+    if value in dic:
+        dic[value] += 1
+    else:
+        dic[value] = 1
+
+
+def check_status(page_status, type_status_in_table, page_url):
+    """Проверяет статусs в основной таблице и на отдельной странице PEP.
+    """
+    if len(type_status_in_table) == 2:
+        table_status = type_status_in_table[1]
+        if page_status not in const.EXPECTED_STATUS[table_status]:
+            logging.info(f'Несовпадающие статусы:\n{page_url}')
+    elif len(type_status_in_table) == 1:
+        if page_status not in const.EXPECTED_STATUS['']:
+            logging.info(f'Несовпадающие статусы:\n{page_url}')
+    else:
+        raise TableException(
+            f'Неожиданная содержание статуса {type_status_in_table}'
+            )

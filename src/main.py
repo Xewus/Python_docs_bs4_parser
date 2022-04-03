@@ -5,34 +5,34 @@ from urllib.parse import urljoin
 import requests_cache
 from tqdm import tqdm
 
-from configs import configure_argument_parser as parser, configure_logging
+import configs as conf
 import constants as const
+import outputs
+import utils
 from constants import BASE_DIR  # especially for tests
-from outputs import control_output as output
-from utils import find_tag, make_soup, view_pep_page
 
 
 def whats_new(session):
     whats_new_url = urljoin(const.MAIN_DOC_URL, 'whatsnew/')
-    soup = make_soup(whats_new_url, session)
+    soup = utils.make_soup(whats_new_url, session)
     if soup is None:
         return
-    main_div = find_tag(soup, 'div', {'id': 'what-s-new-in-python'})
+    main_div = utils.find_tag(soup, 'div', {'id': 'what-s-new-in-python'})
     div_with_ul = main_div.find('div', {'class': 'toctree-wrapper'})
     sections_by_python = div_with_ul.find_all(
         'li', attrs={'class': 'toctree-l1'}
     )
     results = [('Ссылка на статью', 'Заголовок', 'Редактор, Aвтор')]
     for section in tqdm(sections_by_python, colour='green'):
-        version_a_tag = find_tag(section, 'a')
+        version_a_tag = utils.find_tag(section, 'a')
         href = version_a_tag['href']
         version_link = urljoin(whats_new_url, href)
-        soup = make_soup(version_link, session)
+        soup = utils.make_soup(version_link, session)
         if soup is None:
             continue
         h1 = soup.find('h1')
         h1_text = h1.text
-        dl = find_tag(soup, 'dl')
+        dl = utils.find_tag(soup, 'dl')
         dl_text = dl.text.replace('\n', ' ')
         results.append((version_link, h1_text, dl_text))
 
@@ -40,10 +40,10 @@ def whats_new(session):
 
 
 def latest_versions(session):
-    soup = make_soup(const.MAIN_DOC_URL, session)
+    soup = utils.make_soup(const.MAIN_DOC_URL, session)
     if soup is None:
         return None
-    sidebar = find_tag(soup, 'div', {'class': 'sphinxsidebarwrapper'})
+    sidebar = utils.find_tag(soup, 'div', {'class': 'sphinxsidebarwrapper'})
     ul_tags = sidebar.find_all('ul')
     for ul in ul_tags:
         if 'All versions' in ul.text:
@@ -70,10 +70,10 @@ def latest_versions(session):
 
 def download(session):
     downloads_url = urljoin(const.MAIN_DOC_URL, 'download.html')
-    soup = make_soup(downloads_url, session)
+    soup = utils.make_soup(downloads_url, session)
     if soup is None:
         return
-    table = find_tag(soup, 'table')
+    table = utils.find_tag(soup, 'table')
     pdf = table.find('a', {'href': re.compile(r'.+pdf-a4\.zip$')})
     pdf_link = pdf['href']
     pdf_url = urljoin(downloads_url, pdf_link)
@@ -95,33 +95,30 @@ def pep(session):
     for value in const.EXPECTED_STATUS.values():
         for key in value:
             total_by_status[key] = 0
-    soup = make_soup(const.PEP_DOC_URL, session)
+    soup = utils.make_soup(const.PEP_DOC_URL, session)
     if soup is None:
         return None
-    pep_index = find_tag(soup, 'section', {'id': 'numerical-index'})
-    index_body = find_tag(pep_index, 'tbody')
+
+    pep_index = utils.find_tag(soup, 'section', {'id': 'numerical-index'})
+    index_body = utils.find_tag(pep_index, 'tbody')
     index_rows = index_body.find_all('tr')
 
     for row in tqdm(index_rows, colour='blue'):
-        if row.td is None:
-            logging.warning(f'Не найден тэг <td> в строке {row}')
-            continue
-        type_status_in_table = row.td.text
-        link = find_tag(row, 'a')
+        td_tag = utils.find_tag(row, 'td')
+        type_status_in_table = td_tag.text
+        link = utils.find_tag(row, 'a')
         link = link['href']
         page_url = urljoin(const.PEP_DOC_URL, link)
-        type_status = view_pep_page(page_url, session)
+        type_status = utils.view_pep_page(page_url, session)
         if type_status is None:
+            logging.warning(
+                f'Не удалось просмотреть страницу:\n{page_url}'
+            )
             continue
+
         _, page_status = type_status
-        if page_status in total_by_status:
-            total_by_status[page_status] += 1
-        else:
-            total_by_status[page_status] = 1  # for `April Fool!`
-        if len(type_status_in_table) == 2:
-            table_status = type_status_in_table[1]
-            if page_status not in const.EXPECTED_STATUS[table_status]:
-                logging.info(f'Несовпадающие статусы:\n{page_url}')
+        utils.add_to_dict(total_by_status, page_status)
+        utils.check_status(page_status, type_status_in_table, page_url)
 
     [results.append((key, value)) for key, value in total_by_status.items()]
     results.append(('Total', sum(value for value in total_by_status.values())))
@@ -137,10 +134,10 @@ MODE_TO_FUNCTION = {
 
 
 def main():
-    configure_logging()
+    conf.configure_logging()
     logging.info('Парсер запущен!')
 
-    arg_parser = parser(MODE_TO_FUNCTION.keys())
+    arg_parser = conf.configure_argument_parser(MODE_TO_FUNCTION.keys())
     args = arg_parser.parse_args()
     logging.info(f'Аргументы командной строки: {args}')
 
@@ -153,7 +150,7 @@ def main():
     results = MODE_TO_FUNCTION[parser_mode](session)
 
     if results is not None:
-        output(results, args)
+        outputs.control_output(results, args)
 
     logging.info('Парсер завершил работу.')
 
