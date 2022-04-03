@@ -2,7 +2,7 @@ import argparse
 import logging
 from logging.handlers import RotatingFileHandler as RFHandler
 
-from constants import BASE_DIR, LOG_DATETIME_FORMAT, LOG_FORMAT
+import constants as const
 
 
 def configure_argument_parser(available_modes):
@@ -28,13 +28,13 @@ def configure_argument_parser(available_modes):
 
 
 def configure_logging():
-    log_dir = BASE_DIR / 'logs'
+    log_dir = const.BASE_DIR / 'logs'
     log_dir.mkdir(exist_ok=True)
     log_file = log_dir / 'parser.log'
     rotating_handler = RFHandler(log_file, maxBytes=10**6, backupCount=5)
     logging.basicConfig(
-        datefmt=LOG_DATETIME_FORMAT,
-        format=LOG_FORMAT,
+        datefmt=const.LOG_DATETIME_FORMAT,
+        format=const.LOG_FORMAT,
         # Уровень записи логов.
         level=logging.INFO,
         # Вывод логов в терминал.

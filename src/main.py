@@ -6,13 +6,13 @@ import requests_cache
 from tqdm import tqdm
 
 from configs import configure_argument_parser as parser, configure_logging
-from constants import BASE_DIR, MAIN_DOC_URL
+import constants as const
 from outputs import control_output as output
 from utils import find_tag, make_soup
 
 
 def whats_new(session):
-    whats_new_url = urljoin(MAIN_DOC_URL, 'whatsnew/')
+    whats_new_url = urljoin(const.MAIN_DOC_URL, 'whatsnew/')
     soup = make_soup(whats_new_url, session)
     if soup is None:
         return
@@ -39,7 +39,7 @@ def whats_new(session):
 
 
 def latest_versions(session):
-    soup = make_soup(MAIN_DOC_URL, session)
+    soup = make_soup(const.MAIN_DOC_URL, session)
     if soup is None:
         return None
     sidebar = find_tag(soup, 'div', {'class': 'sphinxsidebarwrapper'})
@@ -68,7 +68,7 @@ def latest_versions(session):
 
 
 def download(session):
-    downloads_url = urljoin(MAIN_DOC_URL, 'download.html')
+    downloads_url = urljoin(const.MAIN_DOC_URL, 'download.html')
     soup = make_soup(downloads_url, session)
     if soup is None:
         return
@@ -77,7 +77,7 @@ def download(session):
     pdf_link = pdf['href']
     pdf_url = urljoin(downloads_url, pdf_link)
     filename = pdf_url.split('/')[-1]
-    downloads_dir = BASE_DIR / 'downloads'
+    downloads_dir = const.BASE_DIR / 'downloads'
     downloads_dir.mkdir(exist_ok=True)
     zip_path = downloads_dir / filename
 
