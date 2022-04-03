@@ -5,7 +5,7 @@ import logging
 from prettytable import PrettyTable
 
 import constants as const
-
+from constants import BASE_DIR
 
 def control_output(results, cli_args):
     if cli_args.output == 'file':
@@ -25,13 +25,12 @@ def pretty_output(results):
     table = PrettyTable()
     table.field_names = results[0]
     table.align = 'l'
-    # Добавляем все строки, начиная со второй (с индексом 1).
     table.add_rows(results[1:])
     print(table)
 
 
 def file_output(results, cli_args):
-    results_dir = const.BASE_DIR / 'results'
+    results_dir = BASE_DIR / 'results'
     results_dir.mkdir(exist_ok=True)
     parser_mode = cli_args.mode
     now = dt.datetime.now()

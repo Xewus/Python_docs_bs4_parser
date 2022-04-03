@@ -38,8 +38,6 @@ def configure_logging():
     logging.basicConfig(
         datefmt=const.LOG_DATETIME_FORMAT,
         format=const.LOG_FORMAT,
-        # Уровень записи логов.
         level=logging.INFO,
-        # Вывод логов в терминал.
         handlers=(rotating_handler, logging.StreamHandler())
     )

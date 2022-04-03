@@ -7,6 +7,7 @@ from tqdm import tqdm
 
 from configs import configure_argument_parser as parser, configure_logging
 import constants as const
+from constants import BASE_DIR  # especially for tests
 from outputs import control_output as output
 from utils import find_tag, make_soup, view_pep_page
 
@@ -77,7 +78,7 @@ def download(session):
     pdf_link = pdf['href']
     pdf_url = urljoin(downloads_url, pdf_link)
     filename = pdf_url.split('/')[-1]
-    downloads_dir = const.BASE_DIR / 'downloads'
+    downloads_dir = BASE_DIR / 'downloads'
     downloads_dir.mkdir(exist_ok=True)
     zip_path = downloads_dir / filename
 
@@ -101,25 +102,28 @@ def pep(session):
     index_body = find_tag(pep_index, 'tbody')
     index_rows = index_body.find_all('tr')
 
-    for row in index_rows:
+    for row in tqdm(index_rows, colour='blue'):
         if row.td is None:
             logging.warning(f'Не найден тэг <td> в строке {row}')
             continue
-        status_in_table = row.td.text
-        link = row.a
-        if link is None:
-            logging.warning('Отсутствует тег <a>')
-            continue
-        page_url = urljoin(const.PEP_DOC_URL, link['href'])
+        type_status_in_table = row.td.text
+        link = find_tag(row, 'a')
+        link = link['href']
+        page_url = urljoin(const.PEP_DOC_URL, link)
         type_status = view_pep_page(page_url, session)
         if type_status is None:
             continue
-        tipe, status = type_status
-        if status in total_by_status:
-            total_by_status[status] += 1
+        _, page_status = type_status
+        if page_status in total_by_status:
+            total_by_status[page_status] += 1
         else:
-            total_by_status[status] = 1
-    [results.append((k, v)) for k, v in total_by_status.items()]
+            total_by_status[page_status] = 1  # for `April Fool!`
+        if len(type_status_in_table) == 2:
+            table_status = type_status_in_table[1]
+            if page_status not in const.EXPECTED_STATUS[table_status]:
+                logging.info(f'Несовпадающие статусы:\n{page_url}')
+
+    [results.append((key, value)) for key, value in total_by_status.items()]
     results.append(('Total', sum(value for value in total_by_status.values())))
     return results
 
