@@ -89,9 +89,11 @@ def download(session):
 
 
 def pep(session):
-    pattern = r'pep-\d{4}'
     results = [('Статус', 'Количество')]
-    total = 0
+    total_by_status = {}
+    for value in const.EXPECTED_STATUS.values():
+        for key in value:
+            total_by_status[key] = 0
     soup = make_soup(const.PEP_DOC_URL, session)
     if soup is None:
         return None
@@ -99,7 +101,7 @@ def pep(session):
     index_body = find_tag(pep_index, 'tbody')
     index_rows = index_body.find_all('tr')
 
-    for row in index_rows[:5]:
+    for row in index_rows:
         if row.td is None:
             logging.warning(f'Не найден тэг <td> в строке {row}')
             continue
@@ -109,34 +111,16 @@ def pep(session):
             logging.warning('Отсутствует тег <a>')
             continue
         page_url = urljoin(const.PEP_DOC_URL, link['href'])
-        print(page_url)
-        status_on_page = view_pep_page(page_url, session)
-
-        # if (
-        #     status_in_table[0] not in const.PEP_TYPES and
-        #     link is None
-
-        # ):
-        #     continue
-
-    # pep_hrefs = pep_index.find_all('tr')
-    # for pep in pep_hrefs:
-    #     pep_num = pep.find(class_='num')
-    #     if pep_num is None:
-    #         continue
-    #     link = pep_num.a
-    #     if link is None:
-    #         continue
-    #     link = link['href']
-    #     link_match = re.search(pattern, link)
-    #     if link_match is None:
-    #         continue
-    #     page_url = urljoin(const.PEP_DOC_URL, link)
-    #     status_amount = view_pep_page(page_url, session)
-    #     if status_amount is None:
-    #         continue
-
-    results.append(('Total', total))
+        type_status = view_pep_page(page_url, session)
+        if type_status is None:
+            continue
+        tipe, status = type_status
+        if status in total_by_status:
+            total_by_status[status] += 1
+        else:
+            total_by_status[status] = 1
+    [results.append((k, v)) for k, v in total_by_status.items()]
+    results.append(('Total', sum(value for value in total_by_status.values())))
     return results
 
 

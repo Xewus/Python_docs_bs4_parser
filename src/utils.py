@@ -40,8 +40,29 @@ def find_tag(soup, tag, attrs=None):
 
 
 def view_pep_page(url, session):
+    """Проверяет статус и тип на странице PEP`а.
+    """
+    tipe = status = None
     soup = make_soup(url, session)
     if soup is None:
         return None
     pep_info = find_tag(soup, 'dl')
-    print(pep_info)
+    dt_tags = pep_info.find_all('dt')
+    dd_tags = pep_info.find_all('dd')
+    dt_dd_tags = tuple(zip(dt_tags, dd_tags))
+    for tags in dt_dd_tags:
+        if tipe is not None and status is not None:
+            break
+        if tags[0].text == 'Type':
+            if tipe is not None:
+                logging.warning(
+                    f'Повтор текста в тегах типа на странице {url}'
+                )
+            tipe = tags[1].text
+        elif tags[0].text == 'Status':
+            if status is not None:
+                logging.warning(
+                    f'Повтор текста в тегах статуса на странице {url}'
+                )
+            status = tags[1].text
+    return tipe, status
