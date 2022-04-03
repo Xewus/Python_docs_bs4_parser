@@ -8,7 +8,7 @@ from tqdm import tqdm
 from configs import configure_argument_parser as parser, configure_logging
 import constants as const
 from outputs import control_output as output
-from utils import find_tag, make_soup
+from utils import find_tag, make_soup, view_pep_page
 
 
 def whats_new(session):
@@ -16,8 +16,8 @@ def whats_new(session):
     soup = make_soup(whats_new_url, session)
     if soup is None:
         return
-    main_div = find_tag(soup, 'div', attrs={'id': 'what-s-new-in-python'})
-    div_with_ul = main_div.find('div', attrs={'class': 'toctree-wrapper'})
+    main_div = find_tag(soup, 'div', {'id': 'what-s-new-in-python'})
+    div_with_ul = main_div.find('div', {'class': 'toctree-wrapper'})
     sections_by_python = div_with_ul.find_all(
         'li', attrs={'class': 'toctree-l1'}
     )
@@ -89,12 +89,61 @@ def download(session):
 
 
 def pep(session):
-    ...
+    pattern = r'pep-\d{4}'
+    results = [('Статус', 'Количество')]
+    total = 0
+    soup = make_soup(const.PEP_DOC_URL, session)
+    if soup is None:
+        return None
+    pep_index = find_tag(soup, 'section', {'id': 'numerical-index'})
+    index_body = find_tag(pep_index, 'tbody')
+    index_rows = index_body.find_all('tr')
+
+    for row in index_rows[:5]:
+        if row.td is None:
+            logging.warning(f'Не найден тэг <td> в строке {row}')
+            continue
+        status_in_table = row.td.text
+        link = row.a
+        if link is None:
+            logging.warning('Отсутствует тег <a>')
+            continue
+        page_url = urljoin(const.PEP_DOC_URL, link['href'])
+        print(page_url)
+        status_on_page = view_pep_page(page_url, session)
+
+        # if (
+        #     status_in_table[0] not in const.PEP_TYPES and
+        #     link is None
+
+        # ):
+        #     continue
+
+    # pep_hrefs = pep_index.find_all('tr')
+    # for pep in pep_hrefs:
+    #     pep_num = pep.find(class_='num')
+    #     if pep_num is None:
+    #         continue
+    #     link = pep_num.a
+    #     if link is None:
+    #         continue
+    #     link = link['href']
+    #     link_match = re.search(pattern, link)
+    #     if link_match is None:
+    #         continue
+    #     page_url = urljoin(const.PEP_DOC_URL, link)
+    #     status_amount = view_pep_page(page_url, session)
+    #     if status_amount is None:
+    #         continue
+
+    results.append(('Total', total))
+    return results
 
 
 MODE_TO_FUNCTION = {
     'whats-new': whats_new,
     'latest-versions': latest_versions,
+    'pep': pep,
     'download': download,
 }
 

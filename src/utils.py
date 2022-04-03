@@ -24,7 +24,7 @@ def make_soup(url, session):
     """
     responce = get_response(session, url)
     if responce is None:
-        return
+        return None
     return BeautifulSoup(responce.text, 'lxml')
 
 
@@ -37,3 +37,11 @@ def find_tag(soup, tag, attrs=None):
         logging.error(error_msg, stack_info=True)
         raise ParserFindTagException(error_msg)
     return searched_tag
+
+
+def view_pep_page(url, session):
+    soup = make_soup(url, session)
+    if soup is None:
+        return None
+    pep_info = find_tag(soup, 'dl')
+    print(pep_info)

@@ -7,6 +7,7 @@ LOG_FORMAT = '"%(asctime)s - [%(levelname)s] - %(message)s"'
 LOG_DATETIME_FORMAT = '%d.%m.%Y %H:%M:%S'
 MAIN_DOC_URL = 'https://docs.python.org/3/'
 PEP_DOC_URL = 'https://peps.python.org/'
+PEP_TYPES = ('i', 'P', 'S')
 EXPECTED_STATUS = {
     'A': ['Active', 'Accepted'],
     'D': ['Deferred'],

@@ -1,3 +1,5 @@
+"""Конфигурации чтения из командной строки и записи в лог.
+"""
 import argparse
 import logging
 from logging.handlers import RotatingFileHandler as RFHandler
@@ -24,6 +26,7 @@ def configure_argument_parser(available_modes):
         choices=('pretty', 'file'),
         help='Дополнительные способы вывода данных'
     )
+
     return parser
 
 
