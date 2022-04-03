@@ -6,13 +6,13 @@ import requests_cache
 from tqdm import tqdm
 
 from configs import configure_argument_parser as parser, configure_logging
-from constants import BASE_DIR, PYTHON_DOC_URL
+from constants import BASE_DIR, MAIN_DOC_URL
 from outputs import control_output as output
 from utils import find_tag, make_soup
 
 
 def whats_new(session):
-    whats_new_url = urljoin(PYTHON_DOC_URL, 'whatsnew/')
+    whats_new_url = urljoin(MAIN_DOC_URL, 'whatsnew/')
     soup = make_soup(whats_new_url, session)
     if soup is None:
         return
@@ -21,7 +21,7 @@ def whats_new(session):
     sections_by_python = div_with_ul.find_all(
         'li', attrs={'class': 'toctree-l1'}
     )
-    results = [('Ссылка на статью', 'Заголовок', 'Редактор, автор')]
+    results = [('Ссылка на статью', 'Заголовок', 'Редактор, Aвтор')]
     for section in tqdm(sections_by_python, colour='green'):
         version_a_tag = find_tag(section, 'a')
         href = version_a_tag['href']
@@ -39,7 +39,7 @@ def whats_new(session):
 
 
 def latest_versions(session):
-    soup = make_soup(PYTHON_DOC_URL, session)
+    soup = make_soup(MAIN_DOC_URL, session)
     if soup is None:
         return None
     sidebar = find_tag(soup, 'div', {'class': 'sphinxsidebarwrapper'})
@@ -68,7 +68,7 @@ def latest_versions(session):
 
 
 def download(session):
-    downloads_url = urljoin(PYTHON_DOC_URL, 'download.html')
+    downloads_url = urljoin(MAIN_DOC_URL, 'download.html')
     soup = make_soup(downloads_url, session)
     if soup is None:
         return
@@ -86,6 +86,10 @@ def download(session):
         file.write(responce.content)
 
     logging.info(f'Архив был загружен и сохранён: {zip_path}')
+
+
+def pep(session):
+    ...
 
 
 MODE_TO_FUNCTION = {
