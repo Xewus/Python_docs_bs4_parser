@@ -14,33 +14,55 @@ from constants import BASE_DIR  # especially for tests
 
 
 def whats_new(session):
+    """Собирает ссылки на статьи о нововведениях в Python.
+
+    Args:
+       session (request.Session): Объект сессии.
+
+    Returns:
+        results (list[tuple]): Список с ссылками и авторами.
+        None: При ошибке загрузки страницы.
+    """
     whats_new_url = urljoin(const.MAIN_DOC_URL, 'whatsnew/')
     soup = utils.make_soup(whats_new_url, session)
     if soup is None:
-        return
+        return None
     main_div = utils.find_tag(soup, 'div', {'id': 'what-s-new-in-python'})
-    div_with_ul = main_div.find('div', {'class': 'toctree-wrapper'})
+    div_with_ul = utils.find_tag(main_div, 'div', {'class': 'toctree-wrapper'})
     sections_by_python = div_with_ul.find_all(
         'li', attrs={'class': 'toctree-l1'}
     )
+
     results = [('Ссылка на статью', 'Заголовок', 'Редактор, Aвтор')]
     for section in tqdm(sections_by_python, colour='green'):
-        version_a_tag = utils.find_tag(section, 'a')
-        href = version_a_tag['href']
-        version_link = urljoin(whats_new_url, href)
-        soup = utils.make_soup(version_link, session)
+        link = utils.find_tag(section, 'a')
+        link = link['href']
+        full_link = urljoin(whats_new_url, link)
+        soup = utils.make_soup(full_link, session)
         if soup is None:
             continue
-        h1 = soup.find('h1')
+        h1 = utils.find_tag(soup, 'h1')
         h1_text = h1.text
         dl = utils.find_tag(soup, 'dl')
         dl_text = dl.text.replace('\n', ' ')
-        results.append((version_link, h1_text, dl_text))
+        results.append((full_link, h1_text, dl_text))
 
     return results
 
 
 def latest_versions(session):
+    """Собирает статусы и ссылки на документацию последних версий Python.
+
+    Args:
+        session (request.Session): Объект сессии.
+
+    Raises:
+        Exception: Некорректные настройки парсера для поиска.
+
+    Returns:
+        results (list[tuple]): Список ссылок на документацию.
+        None: При ошибке загрузки страницы.
+    """
     soup = utils.make_soup(const.MAIN_DOC_URL, session)
     if soup is None:
         return None
@@ -70,12 +92,18 @@ def latest_versions(session):
 
 
 def download(session):
+    """Загружает документацию (pdf) последней версии Python.
+
+    Args:
+        session (request.Session): Объект сессии.
+    """
     downloads_url = urljoin(const.MAIN_DOC_URL, 'download.html')
     soup = utils.make_soup(downloads_url, session)
     if soup is None:
-        return
+        return None
+
     table = utils.find_tag(soup, 'table')
-    pdf = table.find('a', {'href': re.compile(r'.+pdf-a4\.zip$')})
+    pdf = utils.find_tag(table, 'a', {'href': re.compile(r'.+pdf-a4\.zip$')})
     pdf_link = pdf['href']
     pdf_url = urljoin(downloads_url, pdf_link)
     filename = pdf_url.split('/')[-1]
@@ -88,11 +116,19 @@ def download(session):
         file.write(responce.content)
 
     logging.info(f'Архив был загружен и сохранён: {zip_path}')
+    return None
 
 
 def pep(session):
-    results = [('Статус', 'Количество')]
-    total_by_status = collections.defaultdict(int)
+    """Проверяет и подсчитывает статусы PEP`ов и их количество.
+
+    Args:
+        session (request.Session): Объект сессии.
+
+    Returns:
+        results (list[tuple]): Список со статусами PEP`ов.
+        None: При ошибке загрузки страницы.
+    """
     soup = utils.make_soup(const.PEP_DOC_URL, session)
     if soup is None:
         return None
@@ -101,6 +137,8 @@ def pep(session):
     index_body = utils.find_tag(pep_index, 'tbody')
     index_rows = index_body.find_all('tr')
 
+    total_by_status = collections.defaultdict(int)
+    results = [('Статус', 'Количество')]
     for row in tqdm(index_rows, colour='blue'):
         td_tag = utils.find_tag(row, 'td')
         type_status_in_table = td_tag.text
@@ -118,8 +156,12 @@ def pep(session):
         total_by_status[page_status] += 1
         utils.check_status(page_status, type_status_in_table, page_url)
 
-    [results.append((key, value)) for key, value in total_by_status.items()]
-    results.append(('Total', sum(value for value in total_by_status.values())))
+    total = 0
+    for key, value in total_by_status.items():
+        results.append((key, value))
+        total += value
+    results.append(('Total', total))
+
     return results
 
 

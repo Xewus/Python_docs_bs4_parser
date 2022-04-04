@@ -16,7 +16,7 @@ def get_response(session, url):
 
     Returns:
         response(request.Response): Ответ сервера с запрошенного адреса.
-        None: При ошибке загрузки запрошенной страницы.
+        None: При ошибке загрузки страницы.
 
     """
     try:
@@ -39,7 +39,7 @@ def make_soup(url, session):
 
     Returns:
         bs4.BeautifulSoup: Текст запрошенной страницы.
-        None: При ошибке загрузки запрошенной страницы.
+        None: При ошибке загрузки страницы.
     """
     responce = get_response(session, url)
     if responce is None:
