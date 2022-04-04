@@ -10,7 +10,8 @@ import configs as conf
 import constants as const
 import outputs
 import utils
-from constants import BASE_DIR  # especially for tests
+
+BASE_DIR = const.BASE_DIR
 
 
 def whats_new(session):

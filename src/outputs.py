@@ -5,7 +5,8 @@ import logging
 from prettytable import PrettyTable
 
 import constants as const
-from constants import BASE_DIR  # especially for tests
+
+BASE_DIR = const.BASE_DIR
 
 
 def control_output(results, cli_args):
