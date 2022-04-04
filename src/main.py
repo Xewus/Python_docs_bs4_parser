@@ -1,6 +1,7 @@
 import logging
 import re
 from urllib.parse import urljoin
+import collections
 
 import requests_cache
 from tqdm import tqdm
@@ -91,10 +92,7 @@ def download(session):
 
 def pep(session):
     results = [('Статус', 'Количество')]
-    total_by_status = {}
-    for value in const.EXPECTED_STATUS.values():
-        for key in value:
-            total_by_status[key] = 0
+    total_by_status = collections.defaultdict(int)
     soup = utils.make_soup(const.PEP_DOC_URL, session)
     if soup is None:
         return None
@@ -117,7 +115,7 @@ def pep(session):
             continue
 
         _, page_status = type_status
-        utils.add_to_dict(total_by_status, page_status)
+        total_by_status[page_status] += 1
         utils.check_status(page_status, type_status_in_table, page_url)
 
     [results.append((key, value)) for key, value in total_by_status.items()]
