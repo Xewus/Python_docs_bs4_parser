@@ -174,6 +174,8 @@ MODE_TO_FUNCTION = {
 
 
 def main():
+    """Запускает парсер.
+    """
     conf.configure_logging()
     logging.info('Парсер запущен!')
 
