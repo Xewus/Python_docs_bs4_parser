@@ -1,7 +1,7 @@
+import collections
 import logging
 import re
 from urllib.parse import urljoin
-import collections
 
 import requests_cache
 from tqdm import tqdm
