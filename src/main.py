@@ -142,17 +142,19 @@ def pep(session):
     for row in tqdm(index_rows, colour='blue'):
         td_tag = utils.find_tag(row, 'td')
         type_status_in_table = td_tag.text
+
         link = utils.find_tag(row, 'a')
         link = link['href']
         page_url = urljoin(const.PEP_DOC_URL, link)
-        type_status = utils.view_pep_page(page_url, session)
-        if type_status is None:
+
+        type_status_on_page = utils.view_pep_page(page_url, session)
+        if type_status_on_page is None:
             logging.warning(
                 f'Не удалось просмотреть страницу:\n{page_url}'
             )
             continue
 
-        _, page_status = type_status
+        _, page_status = type_status_on_page
         total_by_status[page_status] += 1
         utils.check_status(page_status, type_status_in_table, page_url)
 
