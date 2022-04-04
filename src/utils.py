@@ -53,7 +53,7 @@ def find_tag(soup, tag, attrs=None):
     Args:
         soup (bs4.BeautifulSoup): Выбранная часть текста страницы.
         tag (str): Искомый тэг.
-        attrs (dict, optional): Дополнительные метки для поиска.
+        attrs (dict): Дополнительные метки для поиска.
                                   Defaults to None.
 
     Raises:
