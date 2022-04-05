@@ -8,7 +8,7 @@
 ## Как пользоваться
 - Скачать проект:
 ```
-git@github.com:Xewus/bs4_parser_pep.git
+https://github.com/Xewus/Python_docs_parser.git
 ```
 - Перейти в директорию проекта:
 ```
