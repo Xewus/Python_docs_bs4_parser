@@ -1,7 +1,7 @@
 # Парсер документации Python
-Парсит сайт `python.org`используя библиотеку `beautifulsoup4` (https://pypi.org/project/beautifulsoup4/)
+Парсит сайт `python.org`используя библиотеку `beautifulsoup4` https://pypi.org/project/beautifulsoup4/
 
-##Включает в себя следущие возможности:
+## Включает в себя следущие возможности:
 - Проверка обновлений Python
 - Загрузка документации
 - Проверка статусов PEP
