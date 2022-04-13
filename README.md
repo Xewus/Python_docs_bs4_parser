@@ -19,6 +19,10 @@ cd bs4_parser_pep
 ```
 python3 -m venv venv
 ```
+- Активировать виртуальное окружение:
+```
+. venv/bin/activate
+```
 - Установить зависимости:
 ```
 pip install -r requirements.txt
